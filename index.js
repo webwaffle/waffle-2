@@ -1,4 +1,5 @@
 var app = require('express')();
+var cors = require('cors');
 var moment = require('moment');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
@@ -6,6 +7,8 @@ var bodyParser = require('body-parser');
 var fs = require('fs');
 
 app.set('port', process.env.PORT || 3000);
+
+app.use(cors());
 
 app.use(bodyParser.json({type: 'application/json'}));
 var options = {
@@ -92,6 +95,29 @@ app.post('/create-user', (req, res) => {
 app.get('/posts', (req, res) => {
     res.json({ success: true, posts: fileToJson('data/posts.json') })
 })
+app.get('/post/:id', (req, res) => {
+    var table = fileToJson('data/posts.json');
+    for(var i = 0; i < table.length; i++) {
+        if(table[i].id == req.params.id) {
+            var post = table[i];
+        }
+    }
+    if(post) {
+        res.json({ success: true, post: post });
+    } else {
+        res.json({ error: "That post doesn't exist. " });
+    }
+})
+app.get('/search-posts', (req, res) => {
+    var table = fileToJson('data/posts.json');
+    var results = [];
+    for (var i = 0; i < table.length; i++) {
+        if(table[i].title.toUpperCase().includes(req.query.q.toUpperCase())) {
+            results.push(table[i]);
+        }
+    }
+    res.json({ success: true, results: results })
+})
 app.post('/create-post', (req, res) => {
     if(req.session.username && req.session.userid) {
         if(req.body.title && req.body.content) {
@@ -108,7 +134,8 @@ app.post('/create-post', (req, res) => {
                 poster: req.session.username,
                 posted: moment().format("MM-DD-YY h:mm:ss a"),
                 likes: 0,
-                likers: []
+                likers: [],
+                comments: []
             });
             jsonToFile('data/posts.json', table);
             res.json({ success: true })
@@ -149,7 +176,34 @@ app.put('/like/:id', (req, res) => {
         res.json({ error: "You are not logged in." })
     }
 })
-
+app.post('/create-comment/:id', (req, res) => {
+    if(req.session.username) {
+        if(req.body.comment) {
+            var table = fileToJson('data/posts.json');
+            for(var i = 0; i < table.length; i++) {
+                if(table[i].id == req.params.id) {
+                    var found = true;
+                    table[i].comments.push({
+                        comment: req.body.comment,
+                        commenter: req.session.username,
+                        commented: moment().format("MM-DD-YY h:mm:ss a")
+                    });
+                    jsonToFile('data/posts.json', table);
+                    res.json({ success: true });
+                    return;
+                }
+            }
+            if (!found) {
+                res.json({ error: "Comment ID not found" })
+            }
+        } else {
+            res.json({ error: "You must have a comment" })
+        }
+    } else {
+        res.status(401);
+        res.json({ error: "You are not logged in" })
+    }
+})
 app.listen(app.get('port'), function() {
     console.log('API Started on port ' + app.get('port'));
 })

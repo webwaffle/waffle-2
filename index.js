@@ -1,8 +1,8 @@
 var app = require('express')();
 var cors = require('cors');
 var moment = require('moment');
-var session = require('express-session');
-var FileStore = require('session-file-store')(session);
+//var session = require('express-session');
+//var FileStore = require('session-file-store')(session);
 var bodyParser = require('body-parser');
 var fs = require('fs');
 
@@ -11,7 +11,7 @@ app.set('port', process.env.PORT || 3000);
 app.use(cors());
 
 app.use(bodyParser.json({type: 'application/json'}));
-var options = {
+/*var options = {
     secret: 'yee',
     resave: false,
     saveUninitialized: false,
@@ -23,7 +23,7 @@ var options = {
     },
     name: 'my.connect.sid'
 }
-app.use(session(options));
+app.use(session(options));*/
 
 function fileToJson(path) {
     return JSON.parse(fs.readFileSync(path));
@@ -31,12 +31,48 @@ function fileToJson(path) {
 function jsonToFile(path, data) {
     fs.writeFileSync(path, JSON.stringify(data, undefined, 2));
 }
+var randomString = function(length) {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for(var i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
+}
+
+
+function authUser(req, res, next) {
+  if(req.query.key) {
+    var table = fileToJson('data/users.json');
+    for (var i = 0; i < table.length; i++) {
+      if(table[i].apiKey == req.query.key) {
+        req.user = {
+          key: req.query.key,
+          id: table[i].id,
+          username: table[i].username
+        }
+        var found = true;
+        break;
+      }
+    }
+    if(found) {
+      next();
+      return;
+    } else {
+      res.status(401);
+      res.json({ success: false, error: "Unauthorized- Bad Key" })
+    }
+  } else {
+    res.status(401);
+    res.json({ success: false, error: "Unauthorized- No Key" })
+  }
+}
 
 app.post('/login', (req, res) => {
     /*
     Login endpoint, POST req
     Takes a JSON req body with username and password
-    Returns some JSON and a session id cookie if successful
+    Returns some JSON with an API key
     */
     if(req.body.username && req.body.password) {
         var table = fileToJson('data/users.json');
@@ -44,12 +80,11 @@ app.post('/login', (req, res) => {
             if(table[i].username == req.body.username) {
                 var found = true;
                 if(table[i].password == req.body.password) {
-                    req.session.username = req.body.username;
-                    req.session.userid = req.body.password;
-                    res.json({ success: true });
+                    res.json({ success: true, apiKey: table[i].apiKey, username: table[i].username });
                 } else {
                     res.json({error: "Incorrect password"});
                 }
+                break;
             }
         }
         if(!found) {
@@ -60,7 +95,7 @@ app.post('/login', (req, res) => {
     }
 })
 app.get('/logout', (req, res) => {
-    req.session.destroy();
+    req.user.destroy();
     res.json({ success: true });
 })
 app.post('/create-user', (req, res) => {
@@ -79,8 +114,16 @@ app.post('/create-user', (req, res) => {
             } else {
                 id = 0;
             }
+            var keys = table.map((x) => {
+              return x.key;
+            })
+            var key = randomString(10);
+            while (keys.includes(key)) {
+              key = randomString(10);
+            }
             table.push({
                 id: id,
+                apiKey: key,
                 username: req.body.username,
                 password: req.body.password,
                 created: moment().format("MM-DD-YY h:mm:ss a")
@@ -118,8 +161,7 @@ app.get('/search-posts', (req, res) => {
     }
     res.json({ success: true, results: results })
 })
-app.post('/create-post', (req, res) => {
-    if(req.session.username && req.session.userid) {
+app.post('/create-post', authUser, (req, res) => {
         if(req.body.title && req.body.content) {
             var table = fileToJson('data/posts.json');
             if(table[0]) {
@@ -131,7 +173,7 @@ app.post('/create-post', (req, res) => {
                 id: id,
                 title: req.body.title,
                 content: req.body.content,
-                poster: req.session.username,
+                poster: req.user.username,
                 posted: moment().format("MM-DD-YY h:mm:ss a"),
                 likes: 0,
                 likers: [],
@@ -142,24 +184,20 @@ app.post('/create-post', (req, res) => {
         } else {
             res.json({ error: "You must have a title and post content" })
         }
-    } else {
-        res.status(401);
-        res.json({ error: "You are not logged in" });
-    }
 })
-app.put('/like/:id', (req, res) => {
-    if(req.session.username) {
+app.put('/like/:id', authUser, (req, res) => {
+
         var table = fileToJson('data/posts.json');
         for(var i = 0; i < table.length; i++) {
             if(req.params.id == table[i].id) {
                 //console.log('1')
-                if(table[i].likers.includes(req.session.username)) {
+                if(table[i].likers.includes(req.user.username)) {
                     //console.log('2')
                     res.json({ error: "You have already liked this post" });
                     return;
                 } else {
                     //console.log('3')
-                    table[i].likers.push(req.session.username);
+                    table[i].likers.push(req.user.username);
                     table[i].likes++;
                     success = true;
                     break;
@@ -171,13 +209,8 @@ app.put('/like/:id', (req, res) => {
             jsonToFile('data/posts.json', table);
             res.json({ success: true });
         }
-    } else {
-        res.status(401);
-        res.json({ error: "You are not logged in." })
-    }
 })
-app.post('/create-comment/:id', (req, res) => {
-    if(req.session.username) {
+app.post('/create-comment/:id', authUser, (req, res) => {
         if(req.body.comment) {
             var table = fileToJson('data/posts.json');
             for(var i = 0; i < table.length; i++) {
@@ -185,7 +218,7 @@ app.post('/create-comment/:id', (req, res) => {
                     var found = true;
                     table[i].comments.push({
                         comment: req.body.comment,
-                        commenter: req.session.username,
+                        commenter: req.user.username,
                         commented: moment().format("MM-DD-YY h:mm:ss a")
                     });
                     jsonToFile('data/posts.json', table);
@@ -199,10 +232,6 @@ app.post('/create-comment/:id', (req, res) => {
         } else {
             res.json({ error: "You must have a comment" })
         }
-    } else {
-        res.status(401);
-        res.json({ error: "You are not logged in" })
-    }
 })
 app.listen(app.get('port'), function() {
     console.log('API Started on port ' + app.get('port'));

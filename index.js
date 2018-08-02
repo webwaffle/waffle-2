@@ -82,22 +82,22 @@ app.post('/login', (req, res) => {
                 if(table[i].password == req.body.password) {
                     res.json({ success: true, apiKey: table[i].apiKey, username: table[i].username });
                 } else {
-                    res.json({error: "Incorrect password"});
+                    res.json({ success: false, error: "Incorrect password" });
                 }
                 break;
             }
         }
         if(!found) {
-            res.json({error: "Incorrect username"});
+            res.json({ success: false, error: "Incorrect username"});
         }
     } else {
-        res.json({error: "Both username and password are required"});
+        res.json({ success: false, error: "Both username and password are required"});
     }
 })
-app.get('/logout', (req, res) => {
+/*app.get('/logout', (req, res) => {
     req.user.destroy();
     res.json({ success: true });
-})
+})*/
 app.post('/create-user', (req, res) => {
     if(req.body.username && req.body.password) {
         var table = fileToJson('data/users.json');
@@ -107,7 +107,7 @@ app.post('/create-user', (req, res) => {
             }
         }
         if(taken) {
-            res.json({ error: "Username taken" })
+            res.json({ success: false, error: "Username taken" })
         } else {
             if(table[0]) {
                 var id = table.reverse()[0].id + 1;
@@ -132,7 +132,7 @@ app.post('/create-user', (req, res) => {
             res.json({ success: true })
         }
     } else {
-        res.json({ error: "Invalid username/password" })
+        res.json({ success: false, error: "Invalid username/password" })
     }
 })
 app.get('/posts', (req, res) => {
@@ -148,7 +148,7 @@ app.get('/post/:id', (req, res) => {
     if(post) {
         res.json({ success: true, post: post });
     } else {
-        res.json({ error: "That post doesn't exist. " });
+        res.json({ success: false, error: "That post doesn't exist. " });
     }
 })
 app.get('/search-posts', (req, res) => {
@@ -182,7 +182,7 @@ app.post('/create-post', authUser, (req, res) => {
             jsonToFile('data/posts.json', table);
             res.json({ success: true })
         } else {
-            res.json({ error: "You must have a title and post content" })
+            res.json({ success: false, error: "You must have a title and post content" })
         }
 })
 app.put('/like/:id', authUser, (req, res) => {
@@ -193,7 +193,7 @@ app.put('/like/:id', authUser, (req, res) => {
                 //console.log('1')
                 if(table[i].likers.includes(req.user.username)) {
                     //console.log('2')
-                    res.json({ error: "You have already liked this post" });
+                    res.json({ success: false, error: "You have already liked this post" });
                     return;
                 } else {
                     //console.log('3')
@@ -227,10 +227,10 @@ app.post('/create-comment/:id', authUser, (req, res) => {
                 }
             }
             if (!found) {
-                res.json({ error: "Comment ID not found" })
+                res.json({ success: false, error: "Post ID not found" })
             }
         } else {
-            res.json({ error: "You must have a comment" })
+            res.json({ success: false, error: "You must have a comment" })
         }
 })
 app.listen(app.get('port'), function() {

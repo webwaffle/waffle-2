@@ -191,15 +191,14 @@ app.put('/like/:id', authUser, (req, res) => {
   for(var i = 0; i < table.length; i++) {
       if(req.params.id == table[i].id) {
           var found = true;
-          console.log('1')
+          //console.log('1')
           if(table[i].likers.includes(req.user.username)) {
-              console.log('2')
+              //console.log('2')
               success = true;
               table[i].likes--;
-              table[i].likers = table[i].likers.filter(username => username != req.user.username)
-              //return;
+              table[i].likers = table[i].likers.filter(username => username != req.user.username);
           } else {
-              console.log('3')
+              //console.log('3')
               table[i].likers.push(req.user.username);
               table[i].likes++;
               success = true;
@@ -208,14 +207,28 @@ app.put('/like/:id', authUser, (req, res) => {
       }
   }
   if(!found) {
-    console.log('3.5');
+    //console.log('3.5');
     res.json({ success: false, error: "Post not found" })
     return;
   }
   if(success) {
-      console.log('4')
+      //console.log('4')
       jsonToFile('data/posts.json', table);
       res.json({ success: true });
+  }
+})
+app.get('/checkliked/:id', authUser, (req, res) => {
+  var table = fileToJson('data/posts.json');
+  for (var i = 0; i < table.length; i++) {
+    if (table[i].id == req.params.id) {
+      var found = true;
+      res.json({ success: true, liked: table[i].likers.includes(req.user.username) });
+      return;
+    }
+  }
+  if(!found) {
+    res.json({ success: false, error: "Post not found" })
+    return;
   }
 })
 app.post('/create-comment/:id', authUser, (req, res) => {

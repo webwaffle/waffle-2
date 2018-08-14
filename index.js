@@ -136,7 +136,15 @@ app.post('/create-user', (req, res) => {
     }
 })
 app.get('/posts', (req, res) => {
-    res.json({ success: true, posts: fileToJson('data/posts.json') })
+  var table = fileToJson('data/posts.json');
+  /*for (var i = 0; i < table.length; i++) {
+    if(table[i].likers.includes(req.user.username)) {
+      table[i].liked = true;
+    } else {
+      table[i].liked = false;
+    }
+  }*/
+  res.json({ success: true, posts: table })
 })
 app.get('/post/:id', (req, res) => {
     var table = fileToJson('data/posts.json');
@@ -162,28 +170,28 @@ app.get('/search-posts', (req, res) => {
     res.json({ success: true, results: results })
 })
 app.post('/create-post', authUser, (req, res) => {
-        if(req.body.title && req.body.content) {
-            var table = fileToJson('data/posts.json');
-            if(table[0]) {
-                var id = table.reverse()[0].id + 1;
-            } else {
-                var id = 0;
-            }
-            table.push({
-                id: id,
-                title: req.body.title,
-                content: req.body.content,
-                poster: req.user.username,
-                posted: moment().format("MM-DD-YY h:mm:ss a"),
-                likes: 0,
-                likers: [],
-                comments: []
-            });
-            jsonToFile('data/posts.json', table);
-            res.json({ success: true })
-        } else {
-            res.json({ success: false, error: "You must have a title and post content" })
-        }
+  if(req.body.title && req.body.content) {
+      var table = fileToJson('data/posts.json');
+      if(table[0]) {
+          var id = table.reverse()[0].id + 1;
+      } else {
+          var id = 0;
+      }
+      table.push({
+          id: id,
+          title: req.body.title,
+          content: req.body.content,
+          poster: req.user.username,
+          posted: moment().format("MM-DD-YY h:mm:ss a"),
+          likes: 0,
+          likers: [],
+          comments: []
+      });
+      jsonToFile('data/posts.json', table);
+      res.json({ success: true })
+  } else {
+      res.json({ success: false, error: "You must have a title and post content" })
+  }
 })
 app.put('/like/:id', authUser, (req, res) => {
   var table = fileToJson('data/posts.json');

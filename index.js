@@ -129,7 +129,7 @@ app.post('/create-user', (req, res) => {
                 created: moment().format("MM-DD-YY h:mm:ss a")
             })
             jsonToFile('data/users.json', table);
-            res.json({ success: true })
+            res.json({ success: true, username: req.body.username, apiKey: key })
         }
     } else {
         res.json({ success: false, error: "Invalid username/password" })

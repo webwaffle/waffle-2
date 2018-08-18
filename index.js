@@ -154,6 +154,7 @@ app.get('/post/:id', (req, res) => {
         }
     }
     if(post) {
+        post.comments = post.comments.reverse()
         res.json({ success: true, post: post });
     } else {
         res.json({ success: false, error: "That post doesn't exist. " });
@@ -251,7 +252,7 @@ app.post('/create-comment/:id', authUser, (req, res) => {
                         commented: moment().format("MM-DD-YY h:mm:ss a")
                     });
                     jsonToFile('data/posts.json', table);
-                    res.json({ success: true });
+                    res.json({ success: true, comments: table[i].comments.reverse() });
                     return;
                 }
             }
@@ -262,6 +263,8 @@ app.post('/create-comment/:id', authUser, (req, res) => {
             res.json({ success: false, error: "You must have a comment" })
         }
 })
+
+
 app.listen(app.get('port'), function() {
     console.log('API Started on port ' + app.get('port'));
 })

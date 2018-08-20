@@ -1,8 +1,7 @@
 var app = require('express')();
 var cors = require('cors');
+var authUser = require('./auth');
 var moment = require('moment');
-//var session = require('express-session');
-//var FileStore = require('session-file-store')(session);
 var bodyParser = require('body-parser');
 var fs = require('fs');
 
@@ -40,33 +39,6 @@ var randomString = function(length) {
     return text;
 }
 
-
-function authUser(req, res, next) {
-  if(req.query.key) {
-    var table = fileToJson('data/users.json');
-    for (var i = 0; i < table.length; i++) {
-      if(table[i].apiKey == req.query.key) {
-        req.user = {
-          key: req.query.key,
-          id: table[i].id,
-          username: table[i].username
-        }
-        var found = true;
-        break;
-      }
-    }
-    if(found) {
-      next();
-      return;
-    } else {
-      res.status(401);
-      res.json({ success: false, error: "Unauthorized- Bad Key" })
-    }
-  } else {
-    res.status(401);
-    res.json({ success: false, error: "Unauthorized- No Key" })
-  }
-}
 
 app.post('/login', (req, res) => {
     /*

@@ -40,6 +40,14 @@ var randomString = function(length) {
 }
 
 
+app.use((req, res, next) => {
+  res.apiError = function(error) {
+    res.json({ success: false, error: error })
+  }
+  next();
+})
+
+
 app.post('/login', (req, res) => {
     /*
     Login endpoint, POST req
@@ -235,7 +243,31 @@ app.post('/create-comment/:id', authUser, (req, res) => {
             res.json({ success: false, error: "You must have a comment" })
         }
 })
+app.post('/create-chat', authUser, (req, res) => {
+  if(req.body.name && req.body.name != "") {
+    var table = fileToJson('data/chats.json');
+    if(table[0]) {
+      var id = table.reverse()[0].id + 1;
+    } else {
+      var id = 0;
+    }
+    table.push({
+      id: id,
+      name: req.body.name,
+      creator: req.user.username,
+      members: [],
+      messages: []
+    });
+    jsonToFile('data/chats.json', table);
+    res.json({ success: true })
+  } else {
+    res.apiError('Chat name required');
+  }
+})
 
+app.post('/chat-invite', (req, res) => {
+  
+})
 
 app.listen(app.get('port'), function() {
     console.log('API Started on port ' + app.get('port'));

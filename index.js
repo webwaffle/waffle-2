@@ -298,6 +298,55 @@ app.post('/chat-invite/:id', authUser, (req, res) => {
   }
 })
 
+app.post('/chat-message/:id', authUser, (req, res) => {
+  if(req.body.message && req.body.message != "") {
+    var table = fileToJson('data/chats.json');
+    for (var i = 0; i < table.length; i++) {
+      if(table[i].id == req.params.id) {
+        var found = true;
+        if(table[i].members.includes(req.user.username) || table[i].creator == req.user.username) {
+          table[i].messages.push({
+            message: req.body.message,
+            from: req.user.username,
+            sent: moment().format("MM-DD-YYYY h:mm:ss a")
+          });
+          jsonToFile('data/chats.json', table);
+          res.json({ success: true, message: req.body.message });
+          return;
+        } else {
+          res.status(401);
+          res.apiError('You are not in this chat');
+          return;
+        }
+      }
+    }
+    if(!found) {
+      res.apiError('Chat id not found');
+      return;
+    }
+  } else {
+    res.apiError('You need to have a message');
+    return;
+  }
+})
+
+app.get('/chat-info/:id', authUser, (req, res) => {
+  var table = fileToJson('data/chats.json');
+  var chatArray = table.filter(x => x.id == req.params.id);
+  if(chatArray.length != 0) {
+    var chat = chatArray[0];
+  } else {
+    res.apiError('Chat not found');
+    return;
+  }
+  if(chat.members.includes(req.user.username) || chat.creator == req.user.username) {
+    res.json({ success: true, chat: chat });
+  } else {
+    res.status(401);
+    res.apiError('You are not in this chat.')
+  }
+})
+
 app.listen(app.get('port'), () => {
     console.log('API Started on port ' + app.get('port'));
 })

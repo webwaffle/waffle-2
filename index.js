@@ -265,10 +265,39 @@ app.post('/create-chat', authUser, (req, res) => {
   }
 })
 
-app.post('/chat-invite', (req, res) => {
-  
+app.post('/chat-invite/:id', authUser, (req, res) => {
+  if(req.body.username && req.body.username != "") {
+    var table = fileToJson('data/chats.json');
+    for (var i = 0; i < table.length; i++) {
+      if(table[i].id == req.params.id) {
+        var found = true;
+        if(table[i].creator == req.user.username) {
+          if(table[i].members.includes(req.body.username)) {
+            res.apiError('Already invited');
+            return;
+          } else {
+            table[i].members.push(req.body.username);
+            jsonToFile('data/chats.json', table);
+            res.json({ success: true });
+            return;
+          }
+        } else {
+          res.status(401);
+          res.apiError('You are not the creator of this chat');
+          return;
+        }
+      }
+    }
+    if(!found) {
+      res.apiError('Chat id not found');
+      return;
+    }
+  } else {
+    res.apiError('You need to invite someone');
+    return;
+  }
 })
 
-app.listen(app.get('port'), function() {
+app.listen(app.get('port'), () => {
     console.log('API Started on port ' + app.get('port'));
 })

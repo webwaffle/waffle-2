@@ -347,6 +347,12 @@ app.get('/chat-info/:id', authUser, (req, res) => {
   }
 })
 
+app.get('/get-chats', authUser, (req, res) => {
+  var table = fileToJson('data/chats.json');
+  var results = table.filter((x) => { return x.creator == req.user.username || x.members.includes(req.user.username) });
+  res.json({ success: true, chats: results });
+})
+
 app.listen(app.get('port'), () => {
     console.log('API Started on port ' + app.get('port'));
 })

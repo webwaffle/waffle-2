@@ -342,7 +342,7 @@ app.get('/chat-info/:id', authUser, (req, res) => {
   if(chat.members.includes(req.user.username) || chat.creator == req.user.username) {
     res.json({ success: true, chat: chat });
   } else {
-    res.status(401);
+    //res.status(401);
     res.apiError('You are not in this chat.')
   }
 })

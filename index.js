@@ -41,10 +41,10 @@ var randomString = function(length) {
 
 
 app.use((req, res, next) => {
-  res.apiError = function(error) {
-    res.json({ success: false, error: error })
-  }
-  next();
+    res.apiError = function(error) {
+        res.json({ success: false, error: error })
+    }
+    next();
 })
 
 
@@ -116,12 +116,12 @@ app.post('/create-user', (req, res) => {
     }
 })
 app.get('/posts', (req, res) => {
-  var table = fileToJson('data/posts.json');
+    var table = fileToJson('data/posts.json');
   /*for (var i = 0; i < table.length; i++) {
     if(table[i].likers.includes(req.user.username)) {
-      table[i].liked = true;
+        table[i].liked = true;
     } else {
-      table[i].liked = false;
+        table[i].liked = false;
     }
   }*/
   res.json({ success: true, posts: table })
@@ -151,74 +151,74 @@ app.get('/search-posts', (req, res) => {
     res.json({ success: true, results: results })
 })
 app.post('/create-post', authUser, (req, res) => {
-  if(req.body.title && req.body.content) {
-      var table = fileToJson('data/posts.json');
-      if(table[0]) {
-          var id = table.reverse()[0].id + 1;
-      } else {
-          var id = 0;
-      }
-      table.push({
-          id: id,
-          title: req.body.title,
-          content: req.body.content,
-          poster: req.user.username,
-          posted: moment().format("MM-DD-YY h:mm:ss a"),
-          likes: 0,
-          likers: [],
-          comments: []
-      });
-      jsonToFile('data/posts.json', table);
-      res.json({ success: true })
-  } else {
-      res.json({ success: false, error: "You must have a title and post content" })
-  }
+    if(req.body.title && req.body.content) {
+        var table = fileToJson('data/posts.json');
+        if(table[0]) {
+            var id = table.reverse()[0].id + 1;
+        } else {
+            var id = 0;
+        }
+        table.push({
+            id: id,
+            title: req.body.title,
+            content: req.body.content,
+            poster: req.user.username,
+            posted: moment().format("MM-DD-YY h:mm:ss a"),
+            likes: 0,
+            likers: [],
+            comments: []
+        });
+        jsonToFile('data/posts.json', table);
+        res.json({ success: true })
+    } else {
+        res.json({ success: false, error: "You must have a title and post content" })
+    }
 })
 app.put('/like/:id', authUser, (req, res) => {
-  var table = fileToJson('data/posts.json');
-  var found = false;
-  for(var i = 0; i < table.length; i++) {
-      if(req.params.id == table[i].id) {
-          var found = true;
-          //console.log('1')
-          if(table[i].likers.includes(req.user.username)) {
-              //console.log('2')
-              success = true;
-              table[i].likes--;
-              table[i].likers = table[i].likers.filter(username => username != req.user.username);
-          } else {
-              //console.log('3')
-              table[i].likers.push(req.user.username);
-              table[i].likes++;
-              success = true;
-              break;
-          }
-      }
-  }
-  if(!found) {
-    //console.log('3.5');
-    res.json({ success: false, error: "Post not found" })
-    return;
-  }
-  if(success) {
-      //console.log('4')
-      jsonToFile('data/posts.json', table);
-      res.json({ success: true });
-  }
-})
-app.get('/checkliked/:id', authUser, (req, res) => {
-  var table = fileToJson('data/posts.json');
-  for (var i = 0; i < table.length; i++) {
-    if (table[i].id == req.params.id) {
-      var found = true;
-      res.json({ success: true, liked: table[i].likers.includes(req.user.username) });
-      return;
+    var table = fileToJson('data/posts.json');
+    var found = false;
+    for(var i = 0; i < table.length; i++) {
+        if(req.params.id == table[i].id) {
+            var found = true;
+            //console.log('1')
+            if(table[i].likers.includes(req.user.username)) {
+                //console.log('2')
+                success = true;
+                table[i].likes--;
+                table[i].likers = table[i].likers.filter(username => username != req.user.username);
+            } else {
+                //console.log('3')
+                table[i].likers.push(req.user.username);
+                table[i].likes++;
+                success = true;
+                break;
+            }
+        }
     }
-  }
-  if(!found) {
-    res.json({ success: false, error: "Post not found" })
-    return;
-  }
+    if(!found) {
+        //console.log('3.5');
+        res.json({ success: false, error: "Post not found" })
+        return;
+    }
+    if(success) {
+        //console.log('4')
+        jsonToFile('data/posts.json', table);
+        res.json({ success: true });
+    }
+    })
+app.get('/checkliked/:id', authUser, (req, res) => {
+    var table = fileToJson('data/posts.json');
+    for (var i = 0; i < table.length; i++) {
+        if (table[i].id == req.params.id) {
+            var found = true;
+            res.json({ success: true, liked: table[i].likers.includes(req.user.username), likes: table[i].likes });
+            return;
+        }
+    }
+    if(!found) {
+        res.json({ success: false, error: "Post not found" })
+        return;
+    }
 })
 app.post('/create-comment/:id', authUser, (req, res) => {
         if(req.body.comment) {
@@ -244,113 +244,113 @@ app.post('/create-comment/:id', authUser, (req, res) => {
         }
 })
 app.post('/create-chat', authUser, (req, res) => {
-  if(req.body.name && req.body.name != "") {
-    var table = fileToJson('data/chats.json');
-    if(table[0]) {
-      var id = table.reverse()[0].id + 1;
+    if(req.body.name && req.body.name != "") {
+        var table = fileToJson('data/chats.json');
+        if(table[0]) {
+        var id = table.reverse()[0].id + 1;
+        } else {
+        var id = 0;
+        }
+        table.push({
+        id: id,
+        name: req.body.name,
+        creator: req.user.username,
+        members: [],
+        messages: []
+        });
+        jsonToFile('data/chats.json', table);
+        res.json({ success: true })
     } else {
-      var id = 0;
+        res.apiError('Chat name required');
     }
-    table.push({
-      id: id,
-      name: req.body.name,
-      creator: req.user.username,
-      members: [],
-      messages: []
-    });
-    jsonToFile('data/chats.json', table);
-    res.json({ success: true })
-  } else {
-    res.apiError('Chat name required');
-  }
 })
 
 app.post('/chat-invite/:id', authUser, (req, res) => {
-  if(req.body.username && req.body.username != "") {
-    var table = fileToJson('data/chats.json');
-    for (var i = 0; i < table.length; i++) {
-      if(table[i].id == req.params.id) {
-        var found = true;
-        if(table[i].creator == req.user.username) {
-          if(table[i].members.includes(req.body.username)) {
-            res.apiError('Already invited');
-            return;
-          } else {
-            table[i].members.push(req.body.username);
-            jsonToFile('data/chats.json', table);
-            res.json({ success: true });
-            return;
-          }
-        } else {
-          res.status(401);
-          res.apiError('You are not the creator of this chat');
-          return;
+    if(req.body.username && req.body.username != "") {
+        var table = fileToJson('data/chats.json');
+        for (var i = 0; i < table.length; i++) {
+            if(table[i].id == req.params.id) {
+                var found = true;
+                if(table[i].creator == req.user.username) {
+                if(table[i].members.includes(req.body.username)) {
+                    res.apiError('Already invited');
+                    return;
+                } else {
+                    table[i].members.push(req.body.username);
+                    jsonToFile('data/chats.json', table);
+                    res.json({ success: true });
+                    return;
+                }
+                } else {
+                    res.status(401);
+                    res.apiError('You are not the creator of this chat');
+                    return;
+                }
+            }
         }
-      }
+        if(!found) {
+        res.apiError('Chat id not found');
+        return;
+        }
+    } else {
+        res.apiError('You need to invite someone');
+        return;
     }
-    if(!found) {
-      res.apiError('Chat id not found');
-      return;
-    }
-  } else {
-    res.apiError('You need to invite someone');
-    return;
-  }
 })
 
 app.post('/chat-message/:id', authUser, (req, res) => {
-  if(req.body.message && req.body.message != "") {
-    var table = fileToJson('data/chats.json');
-    for (var i = 0; i < table.length; i++) {
-      if(table[i].id == req.params.id) {
-        var found = true;
-        if(table[i].members.includes(req.user.username) || table[i].creator == req.user.username) {
-          table[i].messages.push({
-            message: req.body.message,
-            from: req.user.username,
-            sent: moment().format("MM-DD-YYYY h:mm:ss a")
-          });
-          jsonToFile('data/chats.json', table);
-          res.json({ success: true, message: req.body.message });
-          return;
-        } else {
-          res.status(401);
-          res.apiError('You are not in this chat');
-          return;
+    if(req.body.message && req.body.message != "") {
+        var table = fileToJson('data/chats.json');
+        for (var i = 0; i < table.length; i++) {
+        if(table[i].id == req.params.id) {
+            var found = true;
+            if(table[i].members.includes(req.user.username) || table[i].creator == req.user.username) {
+            table[i].messages.push({
+                message: req.body.message,
+                from: req.user.username,
+                sent: moment().format("MM-DD-YYYY h:mm:ss a")
+            });
+            jsonToFile('data/chats.json', table);
+            res.json({ success: true, message: req.body.message });
+            return;
+            } else {
+            res.status(401);
+            res.apiError('You are not in this chat');
+            return;
+            }
         }
-      }
+        }
+        if(!found) {
+        res.apiError('Chat id not found');
+        return;
+        }
+    } else {
+        res.apiError('You need to have a message');
+        return;
     }
-    if(!found) {
-      res.apiError('Chat id not found');
-      return;
-    }
-  } else {
-    res.apiError('You need to have a message');
-    return;
-  }
 })
 
 app.get('/chat-info/:id', authUser, (req, res) => {
-  var table = fileToJson('data/chats.json');
-  var chatArray = table.filter(x => x.id == req.params.id);
-  if(chatArray.length != 0) {
-    var chat = chatArray[0];
-  } else {
-    res.apiError('Chat not found');
-    return;
-  }
-  if(chat.members.includes(req.user.username) || chat.creator == req.user.username) {
-    res.json({ success: true, chat: chat });
-  } else {
-    //res.status(401);
-    res.apiError('You are not in this chat.')
-  }
-})
+    var table = fileToJson('data/chats.json');
+    var chatArray = table.filter(x => x.id == req.params.id);
+    if(chatArray.length != 0) {
+        var chat = chatArray[0];
+    } else {
+        res.apiError('Chat not found');
+        return;
+    }
+    if(chat.members.includes(req.user.username) || chat.creator == req.user.username) {
+        res.json({ success: true, chat: chat });
+    } else {
+        //res.status(401);
+        res.apiError('You are not in this chat.')
+    }
+    })
 
-app.get('/get-chats', authUser, (req, res) => {
-  var table = fileToJson('data/chats.json');
-  var results = table.filter((x) => { return x.creator == req.user.username || x.members.includes(req.user.username) });
-  res.json({ success: true, chats: results });
+    app.get('/get-chats', authUser, (req, res) => {
+    var table = fileToJson('data/chats.json');
+    var results = table.filter((x) => { return x.creator == req.user.username || x.members.includes(req.user.username) });
+    res.json({ success: true, chats: results });
 })
 
 app.listen(app.get('port'), () => {

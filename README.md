@@ -26,3 +26,36 @@ Response Body:
   username: "whatever"
 }
 ```
+### `/create-user` POST
+Takes a username and password. Creates a user account and returns an API key.
+
+#### Request:
+Request Body:
+```
+{
+  username: "whatever",
+  password: "yeet"
+}
+```
+#### Response
+Response Body:
+```
+{
+  success: true,
+  apiKey: "key",
+  username: "whatever"
+}
+```
+### `/posts` GET
+Takes nothing. Returns an unsorted list of posts.
+
+#### Response
+Response Body:
+```
+{
+  success: true,
+  posts: [
+   
+  ]
+}
+```

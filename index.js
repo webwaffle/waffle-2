@@ -347,10 +347,25 @@ app.get('/chat-info/:id', authUser, (req, res) => {
     }
     })
 
-    app.get('/get-chats', authUser, (req, res) => {
+app.get('/get-chats', authUser, (req, res) => {
     var table = fileToJson('data/chats.json');
     var results = table.filter((x) => { return x.creator == req.user.username || x.members.includes(req.user.username) });
     res.json({ success: true, chats: results });
+})
+
+app.get('/user/:username', (req, res) => {
+    var table = fileToJson('data/users.json');
+    var filtered = table.filter(x => x.username == req.params.username);
+    if(filtered.length != 0) {
+        var toSend = {
+            id: filtered[0].id,
+            username: filtered[0].username,
+            created: filtered[0].created
+        }
+        res.json({ success: true, user: toSend })
+    } else {
+        res.apiError('User not found')
+    }
 })
 
 app.listen(app.get('port'), () => {

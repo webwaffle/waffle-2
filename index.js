@@ -174,6 +174,27 @@ app.post('/create-post', authUser, (req, res) => {
         res.json({ success: false, error: "You must have a title and post content" })
     }
 })
+app.post('/edit-post/:id', authUser, (req, res) => {
+    var found;
+    var table = fileToJson('data/posts.json');
+    for(var i = 0; i < table.length; i++) {
+        if(table[i].id == req.params.id) {
+            found = true;
+            if(table[i].poster == req.user.username) {
+                table[i].content = req.body.newContent;
+            } else {
+                res.apiError('You are not the creator of this post. ');
+                return;
+            }
+        }
+    }
+    if(found) {
+        res.json({ success: true, newContent: req.body.newContent })
+        jsonToFile('data/posts.json', table)
+    } else {
+        res.apiError('That post does not exist. ')
+    }
+})
 app.put('/like/:id', authUser, (req, res) => {
     var table = fileToJson('data/posts.json');
     var found = false;
